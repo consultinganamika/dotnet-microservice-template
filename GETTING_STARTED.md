@@ -1,36 +1,39 @@
-# Getting Started - Step by Step Guide
+# GETTING STARTED - Quick Setup Guide
+
+> Get the Employee Management System running in 5-15 minutes!
 
 ## 📋 Prerequisites Checklist
 
-- [ ] .NET 8 SDK installed (`dotnet --version`)
+Before you start, verify you have:
+
+- [ ] .NET 8 SDK (`dotnet --version`)
 - [ ] SQL Server or Docker installed
-- [ ] Git installed
+- [ ] Git installed  
 - [ ] Visual Studio 2022 or VS Code
 - [ ] Admin access to install packages
 
-## 🚀 Step-by-Step Execution Guide
+## 🚀 Phase 1: Clone & Open (2 minutes)
 
-### Phase 1: Project Setup (5 minutes)
-
-#### Step 1.1: Clone Repository
+### Step 1.1: Clone Repository
 ```bash
 git clone https://github.com/consultinganamika/dotnet-microservice-template.git
 cd dotnet-microservice-template
 ```
 
-#### Step 1.2: Open Solution
-**Option A: Visual Studio 2022**
+### Step 1.2: Open in IDE
+
+**Visual Studio 2022:**
 ```bash
 start EmployeeManagementSystem.sln
 ```
 
-**Option B: VS Code**
+**VS Code:**
 ```bash
 code .
 ```
 
-#### Step 1.3: Verify Structure
-Confirm you see these folders:
+### Step 1.3: Verify Structure
+Confirm you see:
 ```
 src/
 ├── Employee.API
@@ -39,115 +42,135 @@ src/
 └── Employee.Infrastructure
 ```
 
-### Phase 2: Dependencies (10 minutes)
+## 🔄 Phase 2: Dependencies (5 minutes)
 
-#### Step 2.1: Restore NuGet Packages
+### Step 2.1: Restore Packages
 ```bash
 dotnet restore
 ```
 
-#### Step 2.2: Verify Packages
-```bash
-# Check main packages
-dotnet package search MediatR
-dotnet package search EntityFrameworkCore
+**Output Should Show:**
+```
+Restore completed in xxx ms for EmployeeManagementSystem.sln
 ```
 
-### Phase 3: Database Setup (15 minutes)
+### Step 2.2: Verify Build
+```bash
+dotnet build
+```
 
-#### Step 3.1: Start SQL Server (Choose One)
+**Expected Output:**
+```
+Build succeeded. X files generated.
+```
+
+## 🗄️ Phase 3: Database Setup (10 minutes)
+
+### Step 3.1: Start SQL Server
 
 **Option A: Docker (Recommended)**
 ```bash
 # Start containers
 docker-compose up -d
 
-# Verify SQL Server is running
+# Verify running
 docker-compose ps
+```
+
+**Expected Output:**
+```
+NAME       STATUS
+sqlserver  Up 2 seconds
+redis      Up 2 seconds
 ```
 
 **Option B: Local SQL Server**
 - Install SQL Server 2019 or later
-- Update connection string in `appsettings.json`
+- Update `appsettings.json` connection string
 
-#### Step 3.2: Create Database
+### Step 3.2: Create Migrations
 ```bash
-# Navigate to Infrastructure project
 cd src/Employee.Infrastructure
-
-# Create migration
 dotnet ef migrations add InitialCreate
+```
 
-# Apply migration
+**Expected Output:**
+```
+Added migration 'InitialCreate'.
+```
+
+### Step 3.3: Update Database
+```bash
 dotnet ef database update
-
-# Go back to root
 cd ../..
 ```
 
-#### Step 3.3: Verify Database
-```bash
-# Query the database
-# Using SSMS: Connect to localhost, check EmployeeDb
-# Using CLI: sqlcmd -S localhost -U sa -P YourPassword123! -Q "SELECT * FROM Employees"
+**Expected Output:**
+```
+Building model for context 'EmployeeDbContext'.
+Applying migration '..._InitialCreate'.
 ```
 
-### Phase 4: Configure Application (5 minutes)
+### Step 3.4: Verify Database
+```sql
+-- Check tables created
+SELECT * FROM Employees;
+SELECT * FROM OutboxMessages;
+```
 
-#### Step 4.1: Review Configuration
+## ⚙️ Phase 4: Configuration (3 minutes)
+
+### Step 4.1: Review Configuration
 Open `src/Employee.API/appsettings.json`
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=EmployeeDb;...",
-    "ServiceBus": "Endpoint=sb://your-namespace.servicebus.windows.net/;..."
-  }
-}
+**For Local Dev:**
+- ✅ Default connection string works
+- ✅ JWT secret is for demo
+- ✅ Service Bus is optional
+
+### Step 4.2: Optional: User Secrets
+```bash
+# Store sensitive data (won't be committed)
+dotnet user-secrets init
+dotnet user-secrets set "JwtSettings:Secret" "your-secret"
 ```
 
-#### Step 4.2: Local Development Settings
-- For local dev, default settings should work
-- JWT Secret is for demo only (change in production)
-- Service Bus is optional for local testing
+## 🎬 Phase 5: Run Application (2 minutes)
 
-### Phase 5: Run Application (5 minutes)
-
-#### Step 5.1: Start API
+### Step 5.1: Start API
 ```bash
-# From root directory
 cd src/Employee.API
 dotnet run
 ```
 
-**Expected Output**:
+**Expected Output:**
 ```
 Building...
 info: Microsoft.Hosting.Lifetime[14]
       Now listening on: https://localhost:5001
       Now listening on: http://localhost:5000
 info: Microsoft.Hosting.Lifetime[0]
-      Application started. Press Ctrl+C to stop.
+      Application started.
 ```
 
-#### Step 5.2: Access API
+### Step 5.2: Verify Running
+Open in browser:
 - **Swagger UI**: https://localhost:5001/swagger
 - **Health Check**: https://localhost:5001/health
 - **API Base**: https://localhost:5001/api/v1
 
-### Phase 6: Test Application (10 minutes)
+## 🧪 Phase 6: Test Application (5 minutes)
 
-#### Step 6.1: Test via Swagger UI
+### Step 6.1: Get All Employees
 1. Open https://localhost:5001/swagger
-2. Expand "Employees" section
-3. Click "Try it out" on GET /api/v1/employees
-4. Click "Execute"
-5. See response (should be empty array initially)
+2. Find "GET /api/v1/employees"
+3. Click "Try it out" → "Execute"
+4. See empty array: `{"data": [], ...}`
 
-#### Step 6.2: Create Employee
-1. Scroll to POST /api/v1/employees
+### Step 6.2: Create Employee
+1. Find "POST /api/v1/employees"
 2. Click "Try it out"
-3. Modify request body:
+3. Paste request body:
 ```json
 {
   "firstName": "John",
@@ -155,285 +178,246 @@ info: Microsoft.Hosting.Lifetime[0]
   "email": "john@example.com",
   "phoneNumber": "+11234567890",
   "department": "Engineering",
-  "position": "Developer",
-  "salary": 100000,
-  "dateOfBirth": "1990-01-01",
-  "hireDate": "2023-01-01"
+  "position": "Senior Developer",
+  "salary": 150000,
+  "dateOfBirth": "1990-01-15",
+  "hireDate": "2020-01-15"
 }
 ```
 4. Click "Execute"
-5. Verify 201 Created response
+5. Verify response code: **201 Created**
 
-#### Step 6.3: Retrieve Employee
-1. Scroll to GET /api/v1/employees/{id}
-2. Enter ID: 1
+### Step 6.3: Get Employee by ID
+1. Find "GET /api/v1/employees/{id}"
+2. Enter ID: `1`
 3. Click "Execute"
-4. Verify employee data returned
+4. Verify response includes your employee
 
-#### Step 6.4: Update Employee
-1. Scroll to PUT /api/v1/employees/{id}
-2. Enter ID: 1
-3. Modify salary to 120000
+### Step 6.4: Update Employee
+1. Find "PUT /api/v1/employees/{id}"
+2. Enter ID: `1`
+3. Modify salary: `160000`
 4. Click "Execute"
-5. Verify 200 OK response
+5. Verify response code: **200 OK**
 
-#### Step 6.5: Delete Employee
-1. Scroll to DELETE /api/v1/employees/{id}
-2. Enter ID: 1
+### Step 6.5: Delete Employee
+1. Find "DELETE /api/v1/employees/{id}"
+2. Enter ID: `1`
 3. Click "Execute"
-4. Verify 204 No Content response
+4. Verify response code: **204 No Content**
 5. Try GET again - should return 404
 
-### Phase 7: Verify Logging & Events (5 minutes)
+## 📊 Phase 7: Verify Events & Logging (3 minutes)
 
-#### Step 7.1: Check Logs
+### Step 7.1: Check Logs
 ```bash
-# Logs are written to:
 ls -la logs/
-
-# View latest log
 cat logs/app-*.txt
 ```
 
-#### Step 7.2: Monitor Events
-When you create/update/delete employees:
-- Domain events are published internally
-- Integration events are queued in Outbox table
-- Background service would retry failed publishes
+You should see:
+```
+info: Employee created
+info: Integration event published
+info: Domain event handled
+```
 
-#### Step 7.3: Query Outbox
+### Step 7.2: Query Outbox Table
 ```sql
 SELECT * FROM OutboxMessages ORDER BY CreatedAt DESC;
 ```
 
-### Phase 8: Setup Azure Service Bus (Optional, 15 minutes)
+Should show your published events.
 
-#### Step 8.1: Prerequisites
-- Azure subscription
-- Azure CLI installed
-- Admin access
+### Step 7.3: Monitor Background Service
+In application logs, look for:
+```
+Outbox Publisher Background Service started
+Processing outbox message: ...
+```
 
-#### Step 8.2: Create Service Bus
+## ☁️ Phase 8: Azure Service Bus Setup (Optional, 15 minutes)
+
+### Step 8.1: Create Service Bus
 ```bash
-# Set variables
-RESSOURCE_GROUP="myResourceGroup"
-NAMESPACE="employee-service-ns"
-
-# Create namespace
+az login
 az servicebus namespace create \
-  --resource-group $RESOURCE_GROUP \
-  --name $NAMESPACE \
+  --resource-group myRg \
+  --name employee-service-ns \
   --location eastus
+```
 
-# Create topic
+### Step 8.2: Create Topic
+```bash
 az servicebus topic create \
-  --resource-group $RESOURCE_GROUP \
-  --namespace-name $NAMESPACE \
+  --resource-group myRg \
+  --namespace-name employee-service-ns \
   --name employee-events
+```
 
-# Create subscription
+### Step 8.3: Create Subscription
+```bash
 az servicebus topic subscription create \
-  --resource-group $RESOURCE_GROUP \
-  --namespace-name $NAMESPACE \
+  --resource-group myRg \
+  --namespace-name employee-service-ns \
   --topic-name employee-events \
   --name employee-service-subscription
 ```
 
-#### Step 8.3: Get Connection String
+### Step 8.4: Get Connection String
 ```bash
 az servicebus namespace authorization-rule keys list \
-  --resource-group $RESOURCE_GROUP \
-  --namespace-name $NAMESPACE \
+  --resource-group myRg \
+  --namespace-name employee-service-ns \
   --name RootManageSharedAccessKey \
   --query primaryConnectionString \
   --output tsv
 ```
 
-#### Step 8.4: Update Configuration
+### Step 8.5: Update Configuration
 Update `appsettings.json`:
 ```json
 {
   "ConnectionStrings": {
-    "ServiceBus": "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=YOUR_KEY"
+    "ServiceBus": "Endpoint=sb://employee-service-ns.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=YOUR_KEY"
   }
 }
 ```
 
-#### Step 8.5: Restart Application
+### Step 8.6: Restart Application
 ```bash
-# Stop current instance (Ctrl+C)
+# Stop current (Ctrl+C)
 # Restart
 cd src/Employee.API
 dotnet run
 ```
 
-Events will now be published to Service Bus!
+Events now publish to Service Bus! 🎉
 
 ---
 
 ## 🎯 Quick Reference Commands
 
-### Docker Commands
+### Docker
 ```bash
-# Start containers
-docker-compose up -d
-
-# Stop containers
-docker-compose down
-
-# View logs
-docker-compose logs -f
-
-# Connect to SQL Server
-docker exec -it <container-id> /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourPassword123!
+docker-compose up -d          # Start
+docker-compose down           # Stop
+docker-compose logs -f        # View logs
 ```
 
-### .NET Commands
+### .NET
 ```bash
-# Run project
-dotnet run
-
-# Run with watch (auto-restart)
-dotnet watch run
-
-# Build
-dotnet build
-
-# Build Release
-dotnet build -c Release
-
-# Clean
-dotnet clean
-
-# Restore packages
-dotnet restore
+dotnet run                    # Run
+dotnet watch run              # Run with auto-restart
+dotnet build                  # Build
+dotnet clean                  # Clean
 ```
 
-### Entity Framework Commands
+### Entity Framework
 ```bash
-# List migrations
-dotnet ef migrations list
-
-# Add migration
-dotnet ef migrations add MigrationName
-
-# Remove last migration
-dotnet ef migrations remove
-
-# Update database
-dotnet ef database update
-
-# Drop database
-dotnet ef database drop
-
-# Generate SQL script
-dotnet ef migrations script
+cd src/Employee.Infrastructure
+dotnet ef migrations add Name      # Create migration
+dotnet ef migrations remove        # Remove last
+dotnet ef database update          # Apply migrations
+dotnet ef database drop -f         # Delete database
 ```
 
-### Azure CLI Commands
+### Azure CLI
 ```bash
-# Login to Azure
-az login
-
-# List resources
-az servicebus namespace list
-
-# Create namespace
-az servicebus namespace create --name ns-name --resource-group rg
-
-# Create topic
-az servicebus topic create --namespace-name ns --name topic-name --resource-group rg
+az login                           # Login to Azure
+az servicebus namespace list       # List namespaces
+az group create -n myRg -l eastus  # Create resource group
 ```
 
 ---
 
 ## ✅ Verification Checklist
 
-### After Setup Complete
-- [ ] Solution opens in Visual Studio
-- [ ] NuGet packages restored
-- [ ] SQL Server container running (or local instance)
+After completing all phases:
+
+- [ ] Solution opens in IDE
+- [ ] All 4 projects load
+- [ ] Packages restored
+- [ ] Docker containers running
 - [ ] Database migrations applied
 - [ ] Application starts without errors
 - [ ] Swagger UI accessible
-- [ ] Can create employee via API
-- [ ] Can retrieve employee via API
-- [ ] Can update employee via API
-- [ ] Can delete employee via API
-- [ ] Health check endpoint works
+- [ ] Can create employee
+- [ ] Can retrieve employee
+- [ ] Can update employee
+- [ ] Can delete employee
+- [ ] Health check works (/health)
 - [ ] Logs are being written
-
-### Optional: Service Bus
-- [ ] Service Bus namespace created in Azure
-- [ ] Topic and subscription created
-- [ ] Connection string updated in config
-- [ ] Application publishes events to Service Bus
-- [ ] Events appear in subscription
-
----
+- [ ] Database has Employees table
+- [ ] Outbox table exists
 
 ## 🆘 Common Issues & Solutions
 
-### Issue: "Connection Refused" to SQL Server
+### "Connection refused" to SQL Server
 ```bash
-# Restart Docker
 docker-compose restart
-
-# Or verify local SQL Server is running
+# or verify local SQL Server is running
 ```
 
-### Issue: "Port Already in Use"
+### "Port 5001 already in use"
 ```bash
-# Run on different port
 dotnet run --urls "https://localhost:5002"
 ```
 
-### Issue: "Migration Failed"
+### "EF Migration error"
 ```bash
-# Reset database
 cd src/Employee.Infrastructure
 dotnet ef database drop -f
+dotnet ef migrations add InitialCreate
 dotnet ef database update
-cd ../..
 ```
 
-### Issue: "Package Not Found"
+### "Cannot find SQL Server"
 ```bash
-# Clear NuGet cache and restore
+# Check appsettings.json connection string
+# For Docker: Server=localhost
+# For local: Server=YOUR_SERVER_NAME
+```
+
+### "NuGet restore failed"
+```bash
 dotnet nuget locals all --clear
 dotnet restore
 ```
 
----
-
-## 📚 Next Steps
-
-1. **Explore the Code**
-   - Understand layered architecture
-   - Study CQRS implementation
-   - Review event-driven patterns
-
-2. **Add Unit Tests**
-   - Create Employee.Tests project
-   - Test handlers and validators
-   - Use xUnit or NUnit
-
-3. **Setup CI/CD**
-   - GitHub Actions
-   - Azure Pipelines
-   - Docker Registry
-
-4. **Deploy to Cloud**
-   - Azure Container Instances
-   - Azure App Service
-   - Kubernetes (AKS)
-
-5. **Integrate with Microservices**
-   - Setup Payment Service
-   - Setup Order Service
-   - Setup HR Service
-   - Enable inter-service communication
+### "Package not found"
+```bash
+# Check internet connection
+# Try different NuGet source
+dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org
+```
 
 ---
 
-**Congratulations! Your microservice is now running! 🎉**
+## 📖 Next Steps
+
+1. ✅ **Completed Setup?** 
+   → Explore the codebase structure
+
+2. **Understand Architecture?**
+   → Read [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+
+3. **Want Full Overview?**
+   → Check [COMPREHENSIVE_README.md](./COMPREHENSIVE_README.md)
+
+4. **Setup Azure Service Bus?**
+   → Follow [SERVICE_BUS_SETUP.md](./SERVICE_BUS_SETUP.md)
+
+5. **Add Unit Tests?**
+   → Create Employee.Tests project with xUnit
+
+6. **Deploy to Cloud?**
+   → Use Docker and Azure Container Registry
+
+---
+
+**🎉 Congratulations! Your microservice is running!**
+
+📊 **Total Setup Time**: 5-15 minutes  
+✅ **Status**: Ready for Development  
+🚀 **Next**: Start exploring the code!
